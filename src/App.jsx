@@ -2,8 +2,6 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AdminLayout from './Layout/AdminLayout';
 import Dashboard from './pages/Dashboard';
-import Users from './pages/Users';
-import Content from './pages/Content';
 import Leads from './pages/Leads';
 import Login from './pages/Login';
 import './App.css';
@@ -26,10 +24,8 @@ function App() {
           </ProtectedRoute>
         }>
           <Route index element={<Dashboard />} />
-          <Route path="users" element={<Users />} />
-          <Route path="content" element={<Content />} />
           <Route path="leads" element={<Leads />} />
-          <Route path="settings" element={<div>Settings Page (Coming Soon)</div>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>

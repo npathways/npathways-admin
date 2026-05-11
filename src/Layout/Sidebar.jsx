@@ -13,9 +13,7 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const menuItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/' },
-    { name: 'Users', icon: <Users size={20} />, path: '/users' },
-    { name: 'Content', icon: <FileText size={20} />, path: '/content' },
-    { name: 'Leads', icon: <Send size={20} />, path: '/leads' },
+    { name: 'Inquiry Hub', icon: <Send size={20} />, path: '/leads' },
   ];
 
   const handleLogout = () => {
@@ -44,10 +42,6 @@ const Sidebar = () => {
       </nav>
 
       <div className="sidebar-footer">
-        <NavLink to="/settings" className="nav-item">
-          <Settings size={20} />
-          <span>Settings</span>
-        </NavLink>
         <button className="nav-item logout-btn" onClick={handleLogout}>
           <LogOut size={20} />
           <span>Logout</span>
