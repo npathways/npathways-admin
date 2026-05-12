@@ -1,12 +1,13 @@
-import React from 'react';
-import { Bell, Search, User } from 'lucide-react';
+import { Bell, Search, User, Menu } from 'lucide-react';
 
-const Navbar = () => {
+const Navbar = ({ onMenuClick }) => {
   return (
     <header className="navbar glass">
-      <div className="search-bar">
-        <Search size={18} />
-        <input type="text" placeholder="Search for leads, users, or content..." />
+      <div className="navbar-left">
+        <button className="mobile-menu-btn" onClick={onMenuClick}>
+          <Menu size={24} />
+        </button>
+        <div className="navbar-left-spacer"></div>
       </div>
 
       <div className="navbar-actions">

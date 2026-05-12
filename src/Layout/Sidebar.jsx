@@ -9,7 +9,9 @@ import {
   LogOut
 } from 'lucide-react';
 
-const Sidebar = () => {
+import logo from '../assets/logo.png';
+
+const Sidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const menuItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/' },
@@ -22,10 +24,9 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-logo">
-        <h2>NPATHWAYS</h2>
-        <span>ADMIN PANEL</span>
+        <img src={logo} alt="NPathways Logo" style={{ height: '80px' }} />
       </div>
       
       <nav className="sidebar-nav">
@@ -33,6 +34,7 @@ const Sidebar = () => {
           <NavLink 
             key={item.name} 
             to={item.path}
+            onClick={onClose}
             className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}
           >
             {item.icon}

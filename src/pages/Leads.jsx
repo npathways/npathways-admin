@@ -2,38 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { FiUsers, FiCalendar, FiTarget, FiMessageSquare, FiRefreshCw, FiExternalLink } from 'react-icons/fi';
 import './Pages.css';
 
+import { useLeads } from '../context/LeadsContext';
+
 const Leads = () => {
-  const [leads, setLeads] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { leads, loading, isRefreshing, error, fetchLeads, updateLeadStage } = useLeads();
   const [selectedLead, setSelectedLead] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
   const [filterStage, setFilterStage] = useState('All');
+  const [showFilters, setShowFilters] = useState(false);
   const itemsPerPage = 5;
 
   const stages = ['New', 'Contacted', 'Qualified', 'Converted', 'Lost'];
   const categories = ['All', 'Student', 'Parent', 'Working Professional'];
-
-  useEffect(() => {
-    fetchLeads();
-  }, []);
-
-  const fetchLeads = async () => {
-    try {
-      setLoading(true);
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-      const response = await fetch(`${baseUrl}/leads`);
-      if (!response.ok) throw new Error('Failed to fetch leads');
-      const data = await response.json();
-      setLeads(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Filter logic
   const filteredLeads = leads.filter(lead => {
@@ -77,30 +59,15 @@ const Leads = () => {
   ];
 
   const updateStage = async (id, newStage) => {
-    try {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-      const response = await fetch(`${baseUrl}/leads/${id}/stage`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pipelineStage: newStage }),
-      });
-      if (!response.ok) throw new Error('Update failed');
-      
-      // Update local state
-      setLeads(leads.map(l => l._id === id ? { ...l, pipelineStage: newStage } : l));
-    } catch (err) {
-      alert('Error updating stage: ' + err.message);
+    const success = await updateLeadStage(id, newStage);
+    if (!success) {
+      alert('Error updating stage. Please try again.');
     }
   };
 
 
 
-  if (loading) return (
-    <div className="loading-state">
-      <FiRefreshCw className="spin" />
-      <p>Syncing global inquiries...</p>
-    </div>
-  );
+
 
   return (
     <div className="leads-page premium-layout">
@@ -109,113 +76,153 @@ const Leads = () => {
           <h1>Inquiry Hub</h1>
           <p>Real-time lead intelligence and conversion tracking.</p>
         </div>
-        <button onClick={fetchLeads} className="refresh-btn">
-          <FiRefreshCw /> Refresh Data
-        </button>
+        <div className="header-actions">
+          <button 
+            onClick={() => setShowFilters(!showFilters)} 
+            className={`filter-toggle-btn ${showFilters ? 'active' : ''}`}
+          >
+            <FiTarget /> {showFilters ? 'Hide Filters' : 'Filter & Search'}
+          </button>
+          <button 
+            onClick={fetchLeads} 
+            className={`refresh-btn ${isRefreshing ? 'refreshing' : ''}`}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? <div className="npath-spinner npath-spinner-sm" /> : <FiRefreshCw />} 
+            {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+          </button>
+        </div>
       </div>
 
       <div className="stats-grid-premium">
-        {stats.map((stat, i) => (
-          <div key={i} className="stat-card-premium">
-            <div className="stat-icon-box" style={{ color: stat.color }}>
-              {stat.icon}
+        {loading && leads.length === 0 ? (
+          // Skeleton Stats
+          [1,2,3,4].map(i => (
+            <div key={i} className="stat-card-premium skeleton-pulse" style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="npath-spinner npath-spinner-sm" />
             </div>
-            <div className="stat-info">
-              <span className="stat-label">{stat.label}</span>
-              <h2 className="stat-value">{stat.value}</h2>
+          ))
+        ) : (
+          stats.map((stat, i) => (
+            <div key={i} className="stat-card-premium">
+              <div className="stat-icon-box" style={{ color: stat.color }}>
+                {stat.icon}
+              </div>
+              <div className="stat-info">
+                <span className="stat-label">{stat.label}</span>
+                <h2 className="stat-value">{stat.value}</h2>
+              </div>
             </div>
+          ))
+        )}
+      </div>
+
+      <div className={`filter-bar-premium sticky-filter-bar ${showFilters ? 'visible' : 'hidden'}`}>
+        <div className="search-box-premium">
+          <FiTarget className="search-icon" />
+          <input 
+            type="text" 
+            placeholder="Search by name, email or program..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="table-filters">
+          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
+            {categories.map(c => <option key={c} value={c}>{c === 'All' ? 'All Categories' : c}</option>)}
+          </select>
+          <select value={filterStage} onChange={(e) => setFilterStage(e.target.value)}>
+            <option value="All">All Stages</option>
+            {stages.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <div className="entry-count-badge">
+            Found {filteredLeads.length} Inquiries
           </div>
-        ))}
+        </div>
       </div>
 
       <div className="card custom-table-wrapper">
-        <div className="table-header-minimal search-filter-row">
-          <div className="search-box-premium">
-            <FiTarget className="search-icon" />
-            <input 
-              type="text" 
-              placeholder="Search by name, email or program..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="table-filters">
-            <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
-              {categories.map(c => <option key={c} value={c}>{c === 'All' ? 'All Categories' : c}</option>)}
-            </select>
-            <select value={filterStage} onChange={(e) => setFilterStage(e.target.value)}>
-              <option value="All">All Stages</option>
-              {stages.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-            <div className="entry-count-badge">
-              Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredLeads.length)} of {filteredLeads.length}
-            </div>
-          </div>
-        </div>
         <div className="table-container">
           <table className="premium-table">
             <thead>
               <tr>
-                <th>Profile</th>
-                <th>Service Intent</th>
+                <th>Lead Profile</th>
+                <th>Program</th>
                 <th>Category</th>
                 <th>Source</th>
-                <th>Pipeline Stage</th>
-                <th>Submitted</th>
+                <th>Stage</th>
+                <th>Date</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {currentLeads.map((lead) => (
-                <tr key={lead._id}>
-                  <td>
-                    <div className="lead-profile-cell">
-                      <div className="avatar-minimal">{lead.name.charAt(0)}</div>
-                      <div className="profile-details">
-                        <span className="lead-name">{lead.name}</span>
-                        <span className="lead-email">{lead.email}</span>
-                      </div>
+              {loading && leads.length === 0 ? (
+                <tr>
+                  <td colSpan="7">
+                    <div className="table-loader-localized">
+                      <div className="npath-spinner" />
+                      <span>Syncing data...</span>
                     </div>
-                  </td>
-                  <td>
-                    <div className="service-intent">
-                      <FiTarget className="intent-icon" />
-                      <span>{lead.selectedProgram}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`category-pill ${lead.category.toLowerCase().replace(' ', '-')}`}>
-                      {lead.category}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="source-badge">{lead.source || 'Website'}</span>
-                  </td>
-                  <td>
-                    <select 
-                      className={`pipeline-select ${lead.pipelineStage.toLowerCase()}`}
-                      value={lead.pipelineStage}
-                      onChange={(e) => updateStage(lead._id, e.target.value)}
-                    >
-                      {stages.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </td>
-                  <td>
-                    <div className="date-cell">
-                      <span className="date-main">{formatDate(lead.createdAt)}</span>
-                      <span className="date-source">via {lead.source || 'Direct'}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <button 
-                      className="view-btn-minimal" 
-                      onClick={() => setSelectedLead(lead)}
-                    >
-                      <FiExternalLink /> View
-                    </button>
                   </td>
                 </tr>
-              ))}
+              ) : currentLeads.length > 0 ? (
+                currentLeads.map((lead) => (
+                  <tr key={lead._id}>
+                    <td>
+                      <div className="lead-profile-cell">
+                        <div className="avatar-minimal">{lead.name.charAt(0)}</div>
+                        <div className="profile-details">
+                          <span className="lead-name">{lead.name}</span>
+                          <span className="lead-email">{lead.email}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="service-intent">
+                        <FiTarget className="intent-icon" />
+                        <span>{lead.selectedProgram}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`category-pill ${lead.category.toLowerCase().replace(' ', '-')}`}>
+                        {lead.category}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="source-badge">{lead.source || 'Website'}</span>
+                    </td>
+                    <td>
+                      <select 
+                        className={`pipeline-select ${lead.pipelineStage.toLowerCase()}`}
+                        value={lead.pipelineStage}
+                        onChange={(e) => updateStage(lead._id, e.target.value)}
+                      >
+                        {stages.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </td>
+                    <td>
+                      <div className="date-cell">
+                        <span className="date-main">{formatDate(lead.createdAt)}</span>
+                        <span className="date-source">via {lead.source || 'Direct'}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <button 
+                        className="view-btn-minimal" 
+                        onClick={() => setSelectedLead(lead)}
+                      >
+                        <FiExternalLink /> View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+                    No matching inquiries found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

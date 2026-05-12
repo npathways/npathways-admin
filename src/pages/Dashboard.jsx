@@ -6,27 +6,10 @@ import {
 import { FiTrendingUp, FiPieChart, FiBarChart2, FiRefreshCw } from 'react-icons/fi';
 import './Pages.css';
 
+import { useLeads } from '../context/LeadsContext';
+
 const Dashboard = () => {
-  const [leads, setLeads] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchLeads();
-  }, []);
-
-  const fetchLeads = async () => {
-    try {
-      setLoading(true);
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-      const response = await fetch(`${baseUrl}/leads`);
-      const data = await response.json();
-      setLeads(data);
-    } catch (err) {
-      console.error('Error fetching leads:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { leads, loading, isRefreshing, fetchLeads } = useLeads();
 
   // Process data for Timeline (Leads over last 7 days)
   const processTimelineData = () => {
@@ -62,12 +45,7 @@ const Dashboard = () => {
 
   const COLORS = ['#000000', '#4F46E5', '#7C3AED', '#10B981', '#EF4444'];
 
-  if (loading) return (
-    <div className="loading-state">
-      <FiRefreshCw className="spin" />
-      <p>Building analytics...</p>
-    </div>
-  );
+
 
   return (
     <div className="dashboard-page premium-layout">
@@ -76,8 +54,13 @@ const Dashboard = () => {
           <h1>Analytics Overview</h1>
           <p>Visualizing your inquiry pipeline and conversion performance.</p>
         </div>
-        <button onClick={fetchLeads} className="refresh-btn">
-          <FiRefreshCw /> Refresh Data
+        <button 
+          onClick={fetchLeads} 
+          className={`refresh-btn ${isRefreshing ? 'refreshing' : ''}`}
+          disabled={isRefreshing}
+        >
+          {isRefreshing ? <div className="npath-spinner npath-spinner-sm" /> : <FiRefreshCw />} 
+          {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
         </button>
       </div>
 
@@ -88,24 +71,30 @@ const Dashboard = () => {
             <FiTrendingUp /> <h3>Inquiry Velocity (Last 7 Days)</h3>
           </div>
           <div className="chart-body">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={processTimelineData()}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="count" 
-                  stroke="#000" 
-                  strokeWidth={3} 
-                  dot={{ r: 4, fill: '#000', strokeWidth: 2, stroke: '#fff' }} 
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {loading && leads.length === 0 ? (
+              <div className="skeleton-pulse chart-skeleton" style={{ height: '220px' }}>
+                <div className="npath-spinner" />
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={processTimelineData()}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="count" 
+                    stroke="#000" 
+                    strokeWidth={3} 
+                    dot={{ r: 4, fill: '#000', strokeWidth: 2, stroke: '#fff' }} 
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -115,19 +104,25 @@ const Dashboard = () => {
             <FiBarChart2 /> <h3>Conversion Pipeline</h3>
           </div>
           <div className="chart-body">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={processPipelineData()}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="stage" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
-                <Tooltip cursor={{fill: '#f8fafc'}} />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {processPipelineData().map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {loading && leads.length === 0 ? (
+              <div className="skeleton-pulse chart-skeleton" style={{ height: '220px' }}>
+                <div className="npath-spinner" />
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={processPipelineData()}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="stage" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
+                  <Tooltip cursor={{fill: '#f8fafc'}} />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                    {processPipelineData().map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -137,25 +132,31 @@ const Dashboard = () => {
             <FiPieChart /> <h3>Audience Split</h3>
           </div>
           <div className="chart-body">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={processCategoryData()}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {processCategoryData().map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend iconType="circle" />
-              </PieChart>
-            </ResponsiveContainer>
+            {loading && leads.length === 0 ? (
+              <div className="skeleton-pulse chart-skeleton" style={{ height: '220px' }}>
+                <div className="npath-spinner" />
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie
+                    data={processCategoryData()}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {processCategoryData().map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>

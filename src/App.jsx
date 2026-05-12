@@ -6,6 +6,10 @@ import Leads from './pages/Leads';
 import Login from './pages/Login';
 import './App.css';
 
+import { LeadsProvider } from './context/LeadsContext';
+
+import { ToastProvider } from './components/Common/Toast';
+
 // Mock Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
@@ -15,19 +19,23 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        
-        <Route path="/" element={
-          <ProtectedRoute>
-            <AdminLayout />
-          </ProtectedRoute>
-        }>
-          <Route index element={<Dashboard />} />
-          <Route path="leads" element={<Leads />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
+      <ToastProvider>
+        <LeadsProvider>
+          <Routes>
+          <Route path="/login" element={<Login />} />
+          
+          <Route path="/" element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Dashboard />} />
+            <Route path="leads" element={<Leads />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+          </Routes>
+        </LeadsProvider>
+      </ToastProvider>
     </BrowserRouter>
   );
 }
