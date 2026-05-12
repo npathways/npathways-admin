@@ -25,7 +25,6 @@ export const LeadsProvider = ({ children }) => {
       if (!response.ok) throw new Error('Server responded with an error');
       
       const data = await response.json();
-      console.log('DEBUG: Leads data fetched:', data);
       
       // Check if data has actually changed
       const hasChanged = JSON.stringify(data) !== JSON.stringify(leads);
