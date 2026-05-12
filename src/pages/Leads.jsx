@@ -7,6 +7,14 @@ const Leads = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedLead, setSelectedLead] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('All');
+  const [filterStage, setFilterStage] = useState('All');
+  const itemsPerPage = 5;
+
+  const stages = ['New', 'Contacted', 'Qualified', 'Converted', 'Lost'];
+  const categories = ['All', 'Student', 'Parent', 'Working Professional'];
 
   useEffect(() => {
     fetchLeads();
@@ -15,7 +23,8 @@ const Leads = () => {
   const fetchLeads = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/leads');
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${baseUrl}/leads`);
       if (!response.ok) throw new Error('Failed to fetch leads');
       const data = await response.json();
       setLeads(data);
@@ -25,6 +34,32 @@ const Leads = () => {
       setLoading(false);
     }
   };
+
+  // Filter logic
+  const filteredLeads = leads.filter(lead => {
+    const matchesSearch = 
+      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.selectedProgram.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = filterCategory === 'All' || lead.category === filterCategory;
+    const matchesStage = filterStage === 'All' || lead.pipelineStage === filterStage;
+
+    return matchesSearch && matchesCategory && matchesStage;
+  });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentLeads = filteredLeads.slice(indexOfFirstItem, indexOfLastItem);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterCategory, filterStage]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -43,7 +78,8 @@ const Leads = () => {
 
   const updateStage = async (id, newStage) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/leads/${id}/stage`, {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${baseUrl}/leads/${id}/stage`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pipelineStage: newStage }),
@@ -57,7 +93,7 @@ const Leads = () => {
     }
   };
 
-  const stages = ['New', 'Contacted', 'Qualified', 'Converted', 'Lost'];
+
 
   if (loading) return (
     <div className="loading-state">
@@ -93,10 +129,27 @@ const Leads = () => {
       </div>
 
       <div className="card custom-table-wrapper">
-        <div className="table-header-minimal">
-          <h3>Recent Global Leads</h3>
-          <div className="table-actions">
-            <span>Showing {leads.length} entries</span>
+        <div className="table-header-minimal search-filter-row">
+          <div className="search-box-premium">
+            <FiTarget className="search-icon" />
+            <input 
+              type="text" 
+              placeholder="Search by name, email or program..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="table-filters">
+            <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
+              {categories.map(c => <option key={c} value={c}>{c === 'All' ? 'All Categories' : c}</option>)}
+            </select>
+            <select value={filterStage} onChange={(e) => setFilterStage(e.target.value)}>
+              <option value="All">All Stages</option>
+              {stages.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <div className="entry-count-badge">
+              Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredLeads.length)} of {filteredLeads.length}
+            </div>
           </div>
         </div>
         <div className="table-container">
@@ -113,7 +166,7 @@ const Leads = () => {
               </tr>
             </thead>
             <tbody>
-              {leads.map((lead) => (
+              {currentLeads.map((lead) => (
                 <tr key={lead._id}>
                   <td>
                     <div className="lead-profile-cell">
@@ -166,6 +219,37 @@ const Leads = () => {
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination Controls */}
+        {filteredLeads.length > itemsPerPage && (
+          <div className="pagination-wrapper-premium">
+            <button 
+              className="pagination-btn" 
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            <div className="pagination-numbers">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
+                <button
+                  key={number}
+                  onClick={() => paginate(number)}
+                  className={`pagination-number-btn ${currentPage === number ? 'active' : ''}`}
+                >
+                  {number}
+                </button>
+              ))}
+            </div>
+            <button 
+              className="pagination-btn" 
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
 
       {selectedLead && (
