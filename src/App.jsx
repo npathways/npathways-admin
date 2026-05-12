@@ -8,13 +8,13 @@ import './App.css';
 
 import { LeadsProvider } from './context/LeadsContext';
 
-import { ToastProvider } from './components/Common/Toast';
+import { ToastProvider } from './Components/Common/Toast';
 
 // Mock Protected Route Component
-const ProtectedRoute = ({ children }) => {
+function ProtectedRoute({ children }) {
   const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
   return isAuthenticated ? children : <Navigate to="/login" />;
-};
+}
 
 function App() {
   return (
