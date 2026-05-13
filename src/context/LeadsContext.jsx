@@ -20,7 +20,7 @@ export const LeadsProvider = ({ children }) => {
         else setIsRefreshing(true);
       }
 
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
       const response = await fetch(`${baseUrl}/leads`);
       if (!response.ok) throw new Error('Server responded with an error');
       
@@ -51,7 +51,7 @@ export const LeadsProvider = ({ children }) => {
 
   const updateLeadStage = async (id, newStage) => {
     try {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
       const response = await fetch(`${baseUrl}/leads/${id}/stage`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
