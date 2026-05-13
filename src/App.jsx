@@ -13,7 +13,8 @@ import { ToastProvider } from './Components/Common/Toast';
 // Mock Protected Route Component
 function ProtectedRoute({ children }) {
   const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  const hasToken = !!localStorage.getItem('adminToken');
+  return (isAuthenticated && hasToken) ? children : <Navigate to="/login" />;
 }
 
 function App() {
