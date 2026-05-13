@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useToast } from '../Components/Common/Toast';
+import { useToast } from '../components/common/Toast';
 
 const LeadsContext = createContext();
 
