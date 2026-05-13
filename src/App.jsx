@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import AdminLayout from './layout/AdminLayout';
+import AdminLayout from './Layout/AdminLayout';
 import Dashboard from './pages/Dashboard';
 import Leads from './pages/Leads';
 import Login from './pages/Login';
@@ -8,7 +8,7 @@ import './App.css';
 
 import { LeadsProvider } from './context/LeadsContext';
 
-import { ToastProvider } from './components/common/Toast';
+import { ToastProvider } from './Components/Common/Toast';
 
 // Mock Protected Route Component
 function ProtectedRoute({ children }) {
