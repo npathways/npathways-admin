@@ -20,6 +20,8 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
     navigate('/login');
   };
 

@@ -1,6 +1,8 @@
 import { Bell, Search, User, Menu } from 'lucide-react';
 
 const Navbar = ({ onMenuClick }) => {
+  const user = JSON.parse(localStorage.getItem('adminUser') || '{}');
+  
   return (
     <header className="navbar glass">
       <div className="navbar-left">
@@ -17,8 +19,8 @@ const Navbar = ({ onMenuClick }) => {
         </button>
         <div className="user-profile">
           <div className="user-info">
-            <span className="user-name">Deepak</span>
-            <span className="user-role">Administrator</span>
+            <span className="user-name">{user.name || 'Admin'}</span>
+            <span className="user-role">{user.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'Administrator'}</span>
           </div>
           <div className="avatar">
             <User size={20} />

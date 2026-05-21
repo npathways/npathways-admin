@@ -1,19 +1,52 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, Loader2 } from 'lucide-react';
 import './Login.css';
+import { useToast } from '../Components/Common/Toast';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Mock login - in a real app, this would call an API
-    localStorage.setItem('isAuthenticated', 'true');
-    navigate('/');
+    setIsLoading(true);
+
+    try {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${baseUrl}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('adminToken', data.token);
+        localStorage.setItem('adminUser', JSON.stringify({
+          name: data.name,
+          email: data.email,
+          role: data.role
+        }));
+        localStorage.setItem('isAuthenticated', 'true');
+        addToast('Login successful', 'success');
+        navigate('/');
+      } else {
+        addToast(data.message || 'Invalid credentials', 'error');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      addToast('Connection failed. Is the backend running?', 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -83,8 +116,17 @@ const Login = () => {
               </label>
             </div>
 
-            <button type="submit" className="btn-primary login-btn">
-              Sign In
+            <button 
+              type="submit" 
+              className="btn-primary login-btn"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="animate-spin" size={18} style={{ marginRight: '8px' }} />
+                  Signing In...
+                </>
+              ) : 'Sign In'}
             </button>
           </form>
 

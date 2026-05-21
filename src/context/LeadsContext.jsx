@@ -11,6 +11,11 @@ export const LeadsProvider = ({ children }) => {
   const { addToast } = useToast();
 
   const fetchLeads = async (options = {}) => {
+    // Check if we are authenticated before even trying
+    if (localStorage.getItem('isAuthenticated') !== 'true') {
+      return;
+    }
+
     // Only skip loading if options.silent is explicitly true
     const silent = options === true || options.silent === true;
     
@@ -20,8 +25,32 @@ export const LeadsProvider = ({ children }) => {
         else setIsRefreshing(true);
       }
 
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
-      const response = await fetch(`${baseUrl}/leads`);
+      const token = localStorage.getItem('adminToken');
+      
+      // If no token but supposedly authenticated, clear and redirect
+      if (!token) {
+        localStorage.removeItem('isAuthenticated');
+        window.location.href = '/login';
+        return;
+      }
+
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      
+      const response = await fetch(`${baseUrl}/leads`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        localStorage.removeItem('isAuthenticated');
+        addToast('Session expired. Please login again.', 'error');
+        window.location.href = '/login';
+        return;
+      }
+
       if (!response.ok) throw new Error('Server responded with an error');
       
       const data = await response.json();
@@ -51,12 +80,25 @@ export const LeadsProvider = ({ children }) => {
 
   const updateLeadStage = async (id, newStage) => {
     try {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+      const token = localStorage.getItem('adminToken');
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      
       const response = await fetch(`${baseUrl}/leads/${id}/stage`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ pipelineStage: newStage }),
       });
+
+      if (response.status === 401) {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('isAuthenticated');
+        window.location.href = '/login';
+        return false;
+      }
+
       if (!response.ok) throw new Error('Update failed');
       
       // Update local state
