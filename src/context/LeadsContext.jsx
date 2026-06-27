@@ -34,7 +34,7 @@ export const LeadsProvider = ({ children }) => {
         return;
       }
 
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8787/api';
       
       const response = await fetch(`${baseUrl}/leads`, {
         headers: {
@@ -81,7 +81,7 @@ export const LeadsProvider = ({ children }) => {
   const updateLeadStage = async (id, newStage) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8787/api';
       
       const response = await fetch(`${baseUrl}/leads/${id}/stage`, {
         method: 'PATCH',
