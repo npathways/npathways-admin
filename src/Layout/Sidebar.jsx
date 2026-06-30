@@ -16,6 +16,8 @@ const Sidebar = ({ isOpen, onClose }) => {
   const menuItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/' },
     { name: 'Inquiry Hub', icon: <Send size={20} />, path: '/leads' },
+    { name: 'User Details', icon: <Users size={20} />, path: '/users' },
+    { name: 'User Documents', icon: <FileText size={20} />, path: '/documents' },
   ];
 
   const handleLogout = () => {

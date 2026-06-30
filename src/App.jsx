@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AdminLayout from './Layout/AdminLayout';
 import Dashboard from './pages/Dashboard';
 import Leads from './pages/Leads';
+import Users from './pages/Users';
+import UserDocuments from './pages/UserDocuments';
 import Login from './pages/Login';
 import './App.css';
 
@@ -32,6 +34,8 @@ function App() {
           }>
             <Route index element={<Dashboard />} />
             <Route path="leads" element={<Leads />} />
+            <Route path="users" element={<Users />} />
+            <Route path="documents" element={<UserDocuments />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
           </Routes>
