@@ -1031,3 +1031,68 @@ tr:hover td {
     display: none; /* Only show icons if space is very tight */
   }
 }
+
+/* Form Inputs Premium */
+.premium-input {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #1e293b;
+  background-color: #fcfcfc;
+  transition: all 0.2s ease;
+  outline: none;
+}
+.premium-input:focus {
+  border-color: #000;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+}
+.premium-input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+.form-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.modal-footer-premium {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f0f0f0;
+}
+.btn-primary {
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary:hover {
+  background: #333;
+}
+.btn-cancel {
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-cancel:hover {
+  background: #e2e8f0;
+}
