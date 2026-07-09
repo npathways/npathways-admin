@@ -112,6 +112,60 @@ export const LeadsProvider = ({ children }) => {
     }
   };
 
+  const updateLeadDetails = async (id, updateData) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8787/api';
+      
+      const response = await fetch(`${baseUrl}/leads/${id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      if (!response.ok) throw new Error('Update failed');
+      
+      const data = await response.json();
+      setLeads(prev => prev.map(l => l._id === id ? data.lead : l));
+      addToast('Lead details updated', 'success');
+      return true;
+    } catch (err) {
+      addToast('Update failed', 'error');
+      console.error('Error updating lead details:', err);
+      return false;
+    }
+  };
+
+  const addLead = async (leadData) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8787/api';
+      
+      const response = await fetch(`${baseUrl}/leads`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(leadData),
+      });
+
+      if (!response.ok) throw new Error('Add failed');
+      
+      const data = await response.json();
+      setLeads(prev => [data.lead, ...prev]);
+      addToast('Lead created successfully', 'success');
+      return true;
+    } catch (err) {
+      addToast('Failed to create lead', 'error');
+      console.error('Error creating lead:', err);
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchLeads();
   }, []);
@@ -123,7 +177,9 @@ export const LeadsProvider = ({ children }) => {
       isRefreshing, 
       error, 
       fetchLeads, 
-      updateLeadStage 
+      updateLeadStage,
+      updateLeadDetails,
+      addLead
     }}>
       {children}
     </LeadsContext.Provider>
