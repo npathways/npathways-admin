@@ -166,6 +166,36 @@ export const LeadsProvider = ({ children }) => {
     }
   };
 
+  const addLeadsBulk = async (leadsData) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8787/api';
+      
+      const response = await fetch(`${baseUrl}/leads/bulk`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(leadsData),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Bulk upload failed');
+      }
+
+      if (data.inserted && data.inserted.length > 0) {
+        setLeads(prev => [...data.inserted, ...prev]);
+      }
+      return data;
+    } catch (err) {
+      console.error('Error in bulk import:', err);
+      addToast(err.message || 'Bulk upload failed', 'error');
+      return { successCount: 0, failCount: leadsData.length, errors: [{ message: err.message }] };
+    }
+  };
+
   useEffect(() => {
     fetchLeads();
   }, []);
@@ -179,7 +209,8 @@ export const LeadsProvider = ({ children }) => {
       fetchLeads, 
       updateLeadStage,
       updateLeadDetails,
-      addLead
+      addLead,
+      addLeadsBulk
     }}>
       {children}
     </LeadsContext.Provider>
