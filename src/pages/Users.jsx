@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Edit2, Download, Check, X, Eye } from 'lucide-react';
+import { ChevronDown, ChevronUp, Edit2, Download, Check, X, Eye, Trash2 } from 'lucide-react';
 import Modal from '../Components/Common/Modal';
+import { useToast } from '../Components/Common/Toast';
 import './Pages.css';
 
 const Users = () => {
+  const { addToast } = useToast();
   const [expandedRow, setExpandedRow] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [deleteConfirmUser, setDeleteConfirmUser] = useState(null);
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -131,11 +134,13 @@ const Users = () => {
           ...prev,
           [userId]: prev[userId].map(doc => doc.id === docId ? { ...doc, status } : doc)
         }));
+        addToast('Document status updated successfully', 'success');
       } else {
-        alert('Failed to update document status');
+        addToast('Failed to update document status', 'error');
       }
     } catch (error) {
       console.error('Error updating status', error);
+      addToast('Error updating status', 'error');
     }
   };
 
@@ -234,12 +239,48 @@ const Users = () => {
       if (response.ok) {
         setUsers(users.map(u => u.id === editingUser.id ? editingUser : u));
         setIsEditModalOpen(false);
+        addToast('User profile updated successfully', 'success');
       } else {
-        alert('Failed to update user');
+        addToast('Failed to update user', 'error');
       }
     } catch (error) {
       console.error('Error updating user:', error);
-      alert('Error updating user');
+      addToast('Error updating user', 'error');
+    }
+  };
+
+  const handleDeleteClick = (userId, userName) => {
+    setDeleteConfirmUser({ id: userId, name: userName });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmUser) return;
+    const { id: userId, name: userName } = deleteConfirmUser;
+    try {
+      const token = localStorage.getItem('adminToken');
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787/api';
+      
+      const response = await fetch(`${baseUrl}/profiles/admin/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        setUsers(users.filter(u => u.id !== userId));
+        if (expandedRow === userId) {
+          setExpandedRow(null);
+        }
+        addToast(`User "${userName}" deleted successfully`, 'success');
+      } else {
+        addToast('Failed to delete user', 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      addToast('Error deleting user', 'error');
+    } finally {
+      setDeleteConfirmUser(null);
     }
   };
 
@@ -310,6 +351,13 @@ const Users = () => {
                               style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 10px', background: 'var(--color-bg-secondary)', border: '1px solid var(--color-gray-300)', color: 'var(--color-text-primary)' }}
                             >
                               <Edit2 size={14} /> Edit
+                            </button>
+                            <button 
+                              className="btn-small btn-outline" 
+                              onClick={() => handleDeleteClick(user.id, user.name)}
+                              style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 10px', background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#dc2626' }}
+                            >
+                              <Trash2 size={14} /> Delete
                             </button>
                           </div>
                         </td>
@@ -585,6 +633,32 @@ const Users = () => {
                 </button>
               </div>
             )}
+          </div>
+        )}
+      </Modal>
+
+      <Modal isOpen={!!deleteConfirmUser} onClose={() => setDeleteConfirmUser(null)} title="Confirm User Deletion">
+        {deleteConfirmUser && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', padding: '10px 5px' }}>
+            <p style={{ fontSize: '1rem', color: 'var(--color-text-primary)', margin: 0, lineHeight: 1.5 }}>
+              Are you sure you want to delete <strong>{deleteConfirmUser.name}</strong> and all associated data completely? This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
+              <button 
+                type="button" 
+                onClick={() => setDeleteConfirmUser(null)} 
+                style={{ padding: '8px 16px', background: 'var(--color-bg-secondary)', border: '1px solid var(--color-gray-300)', borderRadius: '4px', cursor: 'pointer', color: 'var(--color-text-primary)' }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={confirmDelete} 
+                style={{ padding: '8px 16px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                Delete Completely
+              </button>
+            </div>
           </div>
         )}
       </Modal>
