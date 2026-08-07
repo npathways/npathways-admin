@@ -101,8 +101,9 @@ export const LeadsProvider = ({ children }) => {
 
       if (!response.ok) throw new Error('Update failed');
       
-      // Update local state
-      setLeads(prev => prev.map(l => l._id === id ? { ...l, pipelineStage: newStage } : l));
+      const data = await response.json();
+      // Update local state with the fully updated lead containing audit details (updatedBy, updatedAt)
+      setLeads(prev => prev.map(l => l._id === id ? data.lead : l));
       addToast(`Lead stage updated to ${newStage}`, 'success');
       return true;
     } catch (err) {
