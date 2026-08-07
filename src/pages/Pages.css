@@ -1035,19 +1035,19 @@ tr:hover td {
 /* Form Inputs Premium */
 .premium-input {
   width: 100%;
-  padding: 0.65rem 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  color: #1e293b;
-  background-color: #fcfcfc;
+  padding: 0.85rem 1.2rem;
+  border: 1.5px solid #cbd5e1; /* Darker border for higher visibility */
+  border-radius: 8px;
+  font-size: 1rem; /* Slightly larger font size */
+  color: #0f172a;
+  background-color: #ffffff; /* White background for better contrast */
   transition: all 0.2s ease;
   outline: none;
 }
 .premium-input:focus {
-  border-color: #000;
+  border-color: #0f172a;
   background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.15);
 }
 .premium-input-group {
   display: flex;
@@ -1055,10 +1055,10 @@ tr:hover td {
 }
 .form-label {
   display: block;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #64748b;
-  margin-bottom: 0.4rem;
+  font-size: 0.85rem; /* Larger and clearer labels */
+  font-weight: 800;
+  color: #334155;
+  margin-bottom: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -1068,15 +1068,16 @@ tr:hover td {
   gap: 1rem;
   margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid #e2e8f0;
 }
 .btn-primary {
   background: #000;
   color: #fff;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  font-weight: 600;
+  padding: 0.85rem 1.75rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -1087,9 +1088,10 @@ tr:hover td {
   background: #f1f5f9;
   color: #475569;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  font-weight: 600;
+  padding: 0.85rem 1.75rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
 }
