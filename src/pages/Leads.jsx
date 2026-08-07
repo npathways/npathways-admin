@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiUsers, FiCalendar, FiTarget, FiMessageSquare, FiRefreshCw, FiExternalLink, FiPlus, FiEdit2, FiSave, FiX, FiUpload } from 'react-icons/fi';
 import * as XLSX from 'xlsx';
 import './Pages.css';
@@ -6,23 +7,14 @@ import './Pages.css';
 import { useLeads } from '../context/LeadsContext';
 
 const Leads = () => {
+  const navigate = useNavigate();
   const { leads, loading, isRefreshing, fetchLeads, updateLeadStage, updateLeadDetails, addLead, addLeadsBulk } = useLeads();
-  const [selectedLead, setSelectedLead] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
   const [filterStage, setFilterStage] = useState('All');
   const [showFilters, setShowFilters] = useState(false);
   const itemsPerPage = 5;
-
-  // Modals state
-  const [isEditing, setIsEditing] = useState(false);
-  const [editFormData, setEditFormData] = useState({});
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [addFormData, setAddFormData] = useState({
-    name: '', email: '', phone: '', countryCode: '+91', selectedProgram: '', 
-    category: '', grade: '', passoutYear: '', examType: '', examStatus: '', source: 'Manual Entry'
-  });
 
   // Bulk Import state
   const [importData, setImportData] = useState(null);
@@ -33,7 +25,7 @@ const Leads = () => {
   const [isDragging, setIsDragging] = useState(false);
 
   const stages = ['New', 'Contacted', 'Qualified', 'Converted', 'Lost'];
-  const categories = ['All', 'Student', 'Parent', 'Working Professional'];
+  const categories = ['All', 'Student', 'Parent', 'Working Professional', 'Just Looking Around'];
 
   // Filter logic
   const filteredLeads = leads.filter(lead => {
@@ -81,63 +73,9 @@ const Leads = () => {
     await updateLeadStage(id, newStage);
   };
 
-  // --- Edit Handlers ---
-  const handleEditClick = () => {
-    setEditFormData({
-      name: selectedLead.name || '',
-      email: selectedLead.email || '',
-      phone: selectedLead.phone || '',
-      countryCode: selectedLead.countryCode || '',
-      category: selectedLead.category || '',
-      grade: selectedLead.grade || '',
-      selectedProgram: selectedLead.selectedProgram || '',
-      examType: selectedLead.examType || '',
-      examStatus: selectedLead.examStatus || '',
-      passoutYear: selectedLead.passoutYear || ''
-    });
-    setIsEditing(true);
-  };
 
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditFormData(prev => ({ ...prev, [name]: value }));
-  };
 
-  const handleSaveEdit = async () => {
-    const payload = { ...editFormData };
-    ["category", "examType", "examStatus", "grade", "passoutYear", "selectedProgram"].forEach(key => {
-      if (payload[key] === "") payload[key] = null;
-    });
-    
-    const success = await updateLeadDetails(selectedLead._id, payload);
-    if (success) {
-      setSelectedLead({ ...selectedLead, ...payload });
-      setIsEditing(false);
-    }
-  };
 
-  // --- Add Handlers ---
-  const handleAddChange = (e) => {
-    const { name, value } = e.target;
-    setAddFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleAddSubmit = async (e) => {
-    e.preventDefault();
-    const payload = { ...addFormData };
-    ["category", "examType", "examStatus", "grade", "passoutYear", "selectedProgram"].forEach(key => {
-      if (payload[key] === "") payload[key] = null;
-    });
-
-    const success = await addLead(payload);
-    if (success) {
-      setShowAddModal(false);
-      setAddFormData({
-        name: '', email: '', phone: '', countryCode: '+91', selectedProgram: '', 
-        category: '', grade: '', passoutYear: '', examType: '', examStatus: '', source: 'Manual Entry'
-      });
-    }
-  };
 
   // --- Bulk Import Handlers ---
   const validateLeadLocal = (lead) => {
@@ -153,13 +91,10 @@ const Leads = () => {
     if (!lead.phone || !String(lead.phone).trim()) {
       errors.push("Phone is required");
     }
-    if ((lead.category === "Parent" || lead.category === "Student") && !lead.grade) {
-      errors.push("Grade is required for Parents and Students");
-    }
     
     // Validate enums
-    if (lead.category && !["Parent", "Student", "Working Professional"].includes(lead.category)) {
-      errors.push(`Invalid category: '${lead.category}'. Must be 'Parent', 'Student', or 'Working Professional'`);
+    if (lead.category && !["Parent", "Student", "Working Professional", "Just Looking Around"].includes(lead.category)) {
+      errors.push(`Invalid category: '${lead.category}'. Must be 'Parent', 'Student', 'Working Professional', or 'Just Looking Around'`);
     }
     if (lead.examType && !["CAT", "GMAT", "GRE", "XAT", "NMAT", "SNAP", "Other"].includes(lead.examType)) {
       errors.push(`Invalid exam: '${lead.examType}'`);
@@ -453,7 +388,7 @@ const Leads = () => {
               <FiUpload /> {showImportZone ? 'Hide Import' : 'Import Leads'}
             </button>
             <button 
-              onClick={() => setShowAddModal(true)} 
+              onClick={() => navigate('/leads/new')} 
               className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
             >
               <FiPlus /> Add Lead
@@ -572,7 +507,7 @@ const Leads = () => {
                     <td>
                       <button 
                         className="view-btn-minimal" 
-                        onClick={() => { setSelectedLead(lead); setIsEditing(false); }}
+                        onClick={() => navigate(`/leads/${lead._id || lead.id}`)}
                       >
                         <FiExternalLink /> View
                       </button>
@@ -603,195 +538,9 @@ const Leads = () => {
         )}
       </div>
 
-      {/* View / Edit Modal */}
-      {selectedLead && (
-        <div className="modal-overlay" onClick={() => setSelectedLead(null)}>
-          <div className="modal-content-premium" onClick={e => e.stopPropagation()}>
-            <div className="modal-header-premium">
-              <div className="header-title">
-                <div className="header-avatar">{(selectedLead.name || '?').charAt(0)}</div>
-                <div>
-                  <h2>{selectedLead.name}</h2>
-                  <p>{selectedLead.email}</p>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                {!isEditing && (
-                  <button className="refresh-btn" onClick={handleEditClick} style={{ padding: '8px 12px' }}><FiEdit2 /> Edit</button>
-                )}
-                <button className="close-btn" onClick={() => setSelectedLead(null)}>&times;</button>
-              </div>
-            </div>
-            
-            <div className="modal-body-premium">
-              <div className="detail-section">
-                <h4>Contact & Identity</h4>
-                <div className="detail-row">
-                  <div className="detail-box">
-                    <span className="form-label">Phone</span>
-                    {isEditing ? (
-                      <div className="premium-input-group">
-                        <input type="text" name="countryCode" value={editFormData.countryCode} onChange={handleEditChange} className="premium-input" style={{ width: '80px' }} placeholder="+91" />
-                        <input type="text" name="phone" value={editFormData.phone} onChange={handleEditChange} className="premium-input" />
-                      </div>
-                    ) : `${selectedLead.countryCode || ''} ${selectedLead.phone || ''}`}
-                  </div>
-                  <div className="detail-box">
-                    <span className="form-label">Category</span>
-                    {isEditing ? (
-                      <select name="category" value={editFormData.category} onChange={handleEditChange} className="premium-input">
-                        <option value="">Select Category</option>
-                        {categories.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
-                    ) : (selectedLead.category || 'N/A')}
-                  </div>
-                  {(selectedLead.grade || isEditing) && (
-                    <div className="detail-box">
-                      <span className="form-label">Current Grade</span>
-                      {isEditing ? <input type="text" name="grade" value={editFormData.grade} onChange={handleEditChange} className="premium-input" /> : selectedLead.grade}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="detail-section">
-                <h4>Academic Intent</h4>
-                <div className="detail-row">
-                  <div className="detail-box">
-                    <span className="form-label">Desired Program</span>
-                    {isEditing ? <input type="text" name="selectedProgram" value={editFormData.selectedProgram} onChange={handleEditChange} className="premium-input" /> : (selectedLead.selectedProgram || 'N/A')}
-                  </div>
-                  <div className="detail-box">
-                    <span className="form-label">Entrance Exam</span>
-                    {isEditing ? (
-                      <select name="examType" value={editFormData.examType} onChange={handleEditChange} className="premium-input">
-                        <option value="">Select Exam</option>
-                        {["CAT", "GMAT", "GRE", "XAT", "NMAT", "SNAP", "Other"].map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
-                    ) : (selectedLead.examType || 'N/A')}
-                  </div>
-                  <div className="detail-box">
-                    <span className="form-label">Status</span>
-                    {isEditing ? (
-                      <select name="examStatus" value={editFormData.examStatus} onChange={handleEditChange} className="premium-input">
-                        <option value="">Select Status</option>
-                        {["Applied", "Yet to Apply", "Planning to Apply"].map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
-                    ) : (selectedLead.examStatus || 'N/A')}
-                  </div>
-                </div>
-              </div>
-              <div className="detail-section">
-                <h4>Additional Info</h4>
-                <div className="detail-row">
-                  <div className="detail-box">
-                    <span className="form-label">Passout Year</span>
-                    {isEditing ? <input type="text" name="passoutYear" value={editFormData.passoutYear} onChange={handleEditChange} className="premium-input" /> : (selectedLead.passoutYear || 'N/A')}
-                  </div>
-                  <div className="detail-box"><span className="form-label">Source</span>{selectedLead.source || 'Website'}</div>
-                  <div className="detail-box"><span className="form-label">Inquiry Date</span>{formatDate(selectedLead.createdAt)}</div>
-                </div>
-              </div>
-            </div>
-            {isEditing && (
-              <div className="modal-footer-premium" style={{ padding: '0 2rem 2rem 2rem', marginTop: 0, borderTop: 'none' }}>
-                <button className="btn-cancel" onClick={() => setIsEditing(false)}>Cancel</button>
-                <button className="btn-primary" onClick={handleSaveEdit}>Save Changes</button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
-      {/* Add Lead Modal */}
-      {showAddModal && (
-        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="modal-content-premium" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
-            <div className="modal-header-premium">
-              <div className="header-title"><h2>Add New Lead Manually</h2></div>
-              <button className="close-btn" onClick={() => setShowAddModal(false)}><FiX size={24} /></button>
-            </div>
-            
-            <form onSubmit={handleAddSubmit} className="modal-body-premium">
-              <div className="detail-section">
-                <h4>Basic Info</h4>
-                <div className="detail-row">
-                  <div className="detail-box">
-                    <span className="form-label">Name *</span>
-                    <input type="text" name="name" value={addFormData.name} onChange={handleAddChange} required className="premium-input" />
-                  </div>
-                  <div className="detail-box">
-                    <span className="form-label">Email *</span>
-                    <input type="email" name="email" value={addFormData.email} onChange={handleAddChange} required className="premium-input" />
-                  </div>
-                </div>
-                <div className="detail-row" style={{ marginTop: '16px' }}>
-                  <div className="detail-box" style={{ flex: 1 }}>
-                    <span className="form-label">Phone *</span>
-                    <div className="premium-input-group">
-                      <input type="text" name="countryCode" value={addFormData.countryCode} onChange={handleAddChange} className="premium-input" style={{ width: '80px' }} />
-                      <input type="text" name="phone" value={addFormData.phone} onChange={handleAddChange} required className="premium-input" />
-                    </div>
-                  </div>
-                  <div className="detail-box" style={{ flex: 1 }}>
-                    <span className="form-label">Category</span>
-                    <select name="category" value={addFormData.category} onChange={handleAddChange} className="premium-input">
-                      <option value="">Select Category</option>
-                      {categories.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                </div>
-              </div>
 
-              <div className="detail-section" style={{ marginTop: '24px' }}>
-                <h4>Program & Status</h4>
-                <div className="detail-row">
-                  <div className="detail-box">
-                    <span className="form-label">Program / Service</span>
-                    <input type="text" name="selectedProgram" value={addFormData.selectedProgram} onChange={handleAddChange} className="premium-input" />
-                  </div>
-                  <div className="detail-box">
-                    <span className="form-label">Entrance Exam</span>
-                    <select name="examType" value={addFormData.examType} onChange={handleAddChange} className="premium-input">
-                      <option value="">Select Exam</option>
-                      {["CAT", "GMAT", "GRE", "XAT", "NMAT", "SNAP", "Other"].map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                  <div className="detail-box">
-                    <span className="form-label">Exam Status</span>
-                    <select name="examStatus" value={addFormData.examStatus} onChange={handleAddChange} className="premium-input">
-                      <option value="">Select Status</option>
-                      {["Applied", "Yet to Apply", "Planning to Apply"].map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                </div>
-              </div>
 
-              <div className="detail-section" style={{ marginTop: '24px' }}>
-                <h4>Additional Info</h4>
-                <div className="detail-row">
-                  <div className="detail-box">
-                    <span className="form-label">Current Grade</span>
-                    <input type="text" name="grade" value={addFormData.grade} onChange={handleAddChange} className="premium-input" />
-                  </div>
-                  <div className="detail-box">
-                    <span className="form-label">Passout Year</span>
-                    <input type="text" name="passoutYear" value={addFormData.passoutYear} onChange={handleAddChange} className="premium-input" />
-                  </div>
-                  <div className="detail-box">
-                    <span className="form-label">Source</span>
-                    <input type="text" name="source" value={addFormData.source} onChange={handleAddChange} className="premium-input" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="modal-footer-premium">
-                <button type="button" className="btn-cancel" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">Save Lead</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Import Preview Modal */}
       {importData && (

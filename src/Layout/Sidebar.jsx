@@ -6,19 +6,29 @@ import {
   FileText, 
   Send, 
   Settings,
-  LogOut
+  LogOut,
+  ShieldCheck
 } from 'lucide-react';
 
 import logo from '../assets/logo.png';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
+  
+  const adminUserJson = localStorage.getItem('adminUser');
+  const currentUser = adminUserJson ? JSON.parse(adminUserJson) : null;
+  const isSuperAdmin = currentUser?.role === 'admin';
+
   const menuItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/' },
     { name: 'Inquiry Hub', icon: <Send size={20} />, path: '/leads' },
     { name: 'User Details', icon: <Users size={20} />, path: '/users' },
     { name: 'User Documents', icon: <FileText size={20} />, path: '/documents' },
   ];
+
+  if (isSuperAdmin) {
+    menuItems.push({ name: 'Access Control', icon: <ShieldCheck size={20} />, path: '/admins' });
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
