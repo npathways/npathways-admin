@@ -9,6 +9,7 @@ import Users from './pages/Users';
 import UserDocuments from './pages/UserDocuments';
 import AdminManagement from './pages/AdminManagement';
 import Login from './pages/Login';
+import Settings from './pages/Settings';
 import './App.css';
 
 import { LeadsProvider } from './context/LeadsContext';
@@ -42,6 +43,7 @@ function App() {
             <Route path="users" element={<Users />} />
             <Route path="documents" element={<UserDocuments />} />
             <Route path="admins" element={<AdminManagement />} />
+            <Route path="settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
           </Routes>

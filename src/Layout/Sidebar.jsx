@@ -24,6 +24,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { name: 'Inquiry Hub', icon: <Send size={20} />, path: '/leads' },
     { name: 'User Details', icon: <Users size={20} />, path: '/users' },
     { name: 'User Documents', icon: <FileText size={20} />, path: '/documents' },
+    { name: 'Settings', icon: <Settings size={20} />, path: '/settings' },
   ];
 
   if (isSuperAdmin) {
